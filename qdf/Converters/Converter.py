@@ -18,10 +18,14 @@ class QQAdapter(ABC):
         self.__meas_method:str = "average"
         self.__data_type:str = "nc"
         self.__data_from:str = "qblox" # qblox | qm 
+        self.__new_dataset_path:str = ""
     
     @property
     def file_path( self ):
         return self.__file_path
+    @property
+    def nds_path( self ):
+        return self.__new_dataset_path
     @property
     def nds( self ):
         return self.__new_dataset
@@ -73,9 +77,6 @@ class QQAdapter(ABC):
                 print("The given dataset is already a general format.")
                 self.ds_is_general = True
 
-        # self.__data_from = self.__old_dataset.attrs["system"].lower()
-        # self.__meas_method = self.__old_dataset.attrs["method"].lower()
-
 
         self.DSmaker = DatasetCompiler(exp_name,method=self.__meas_method)
             
@@ -121,11 +122,15 @@ class QQAdapter(ABC):
                         raise ValueError("Arg 'storing_path' must be given ! We don't know where to save it.")
                     else:
                         self.__new_dataset.to_netcdf(self.__file_path)
+                        self.__new_dataset_path = self.__file_path
                 else:
                     self.__new_dataset.to_netcdf(storing_path)
+                    self.__new_dataset_path = storing_path
 
         else:
             print(self.__old_dataset)
+            self.__new_dataset_path = self.__file_path
+
 
     """ Develop case by case """
     @abstractmethod
