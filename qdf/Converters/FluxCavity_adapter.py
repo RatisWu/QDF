@@ -37,5 +37,5 @@ class FluxCavity_dataConverter(QQAdapter):
 if __name__ == "__main__":
 
     Cnvtr = FluxCavity_dataConverter(file_path_or_dataset="TestRawDataset/QM_rawdata/flux_dependent_cavity/AVG/Find_Flux_Period_new.nc")
-    Cnvtr.transformExecutor(storing_path="TestRawDataset/QM_rawdata/flux_dependent_cavity/AVG/Find_Flux_Period_new_new.nc")
+    Cnvtr.transformExecutor(storing_path="TestRawDataset/QM_rawdata/flux_dependent_cavity/AVG/Find_Flux_Period_generalForm.nc")
     

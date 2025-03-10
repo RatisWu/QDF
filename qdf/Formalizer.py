@@ -89,7 +89,7 @@ class DSCoordNameRegister():
         if len(ans) == 0:
             raise NameError(f"The exp name '{exp_name}' haven't been registered. ")
 
-        print(f"** The shape for EXP '{exp_name}' = {ans}.\n    => Please assign the coords in dataset base on them.")
+        print(f"** The shape for EXP '{exp_name}' = {ans}.")
 
         return ans  
 
