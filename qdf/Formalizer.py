@@ -201,18 +201,25 @@ class DatasetCompiler():
             self.__check_data_shape_matched__(value, name)
             self.data_vars[name] = (self.__shape, value)
 
-    def add_attrs(self, new_attributes:dict, old_attributes:dict={}):
+    def add_attrs(self, new_attributes:dict, old_attributes:dict={}, reverse_conflict_priority:bool=False):
         """ Assign the  attributes in a dict here. If `Old_attributes` was given, we merge them together and put `old_attributes` at the first priority when there is a attribute name conflict. """
         if not isinstance(new_attributes,dict):
             raise TypeError("While you are adding the new attributes, arg: `new_attributes` must be a dict.")
 
         if not isinstance(old_attributes,dict):
             raise TypeError("While you are adding the old attributes, arg: `old_attributes` must be a dict.")
+        
+        if not reverse_conflict_priority:
+            if old_attributes != {}:
+                new_attributes.update(old_attributes) # old attr is at the first priority when there is a keyname conflict.
 
-        if old_attributes != {}:
-            new_attributes.update(old_attributes) # old attr is at the first priority when there is a keyname conflict.
+            self.attributes.update(new_attributes)
+        else:
+            if old_attributes != {}:
+                self.attributes.update(old_attributes)
+            
+            self.attributes.update(new_attributes)
 
-        self.attributes.update(new_attributes)
 
     def export_dataset(self,complete_save_path:str=None)->Dataset:
         """ Get your dataset. It will be saved to the given `complete_save_path` if it's not None. """
