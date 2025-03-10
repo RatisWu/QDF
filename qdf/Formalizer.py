@@ -9,19 +9,83 @@ class DSCoordNameRegister():
     
     # register zone start
     #TODO: Register the Exp_name starts with a '_', and upper or lower font are both okay.
-    def _FluxCavity( self ):
-        return ["mixer", "bias", "freq"]
+    def _FluxCavity(self, method:str="average"):
+        return ["q_idx", "mixer", "bias", "freq"]
+    
+    def _PowerQubit(self, method:str="average"):
+        return ["q_idx", "mixer", "xy_amp", "freq"]
+    
+    def _FluxQubit(self, method:str="average"):
+        return ["q_idx", "mixer", "bias", "freq"]
+    
+    def _PowerRabi(self, method:str="average"):
+        match method.lower():
+            case "average":
+                return ["q_idx", "mixer", "pi_amp"]
+            case "oneshot":
+                return ["q_idx", "mixer", "prepared_state", "index", "pi_amp"]
+            case "state":
+                pass
+    
+    def _TimeRabi(self, method:str="average"):
+        match method.lower():
+            case "average":
+                return ["q_idx", "mixer", "pi_dura"]
+            case "oneshot":
+                return ["q_idx", "mixer", "prepared_state", "index", "pi_dura"]
+            case "state":
+                pass
+
+    def _ReadoutFidelity(self, method:str="average"):
+        return ["q_idx", "mixer", "prepared_state", "index"]
+    
+    def _EnergeRelaxation(self, method:str="average"):
+        match method.lower():
+            case "average":
+                return ["q_idx", "mixer", "repeat", "time"]
+            case "oneshot":
+                return ["q_idx", "mixer", "prepared_state", "repeat", "index", "time"]
+            case "state":
+                pass
+
+    def _RamseyT2(self, method:str="average"):
+        match method.lower():
+            case "average":
+                return ["q_idx", "mixer", "repeat", "time"]
+            case "oneshot":
+                return ["q_idx", "mixer", "prepared_state", "repeat", "index", "time"]
+            case "state":
+                pass
+    
+    def _SpinEcho(self, method:str="average"):
+        match method.lower():
+            case "average":
+                return ["q_idx", "mixer", "repeat", "time"]
+            case "oneshot":
+                return ["q_idx", "mixer", "prepared_state", "repeat", "index", "time"]
+            case "state":
+                pass
+    
+    def _CPMG(self, method:str="average"):
+        match method.lower():
+            case "average":
+                return ["q_idx", "mixer", "repeat", "time"]
+            case "oneshot":
+                return ["q_idx", "mixer", "prepared_state", "repeat", "index", "time"]
+            case "state":
+                pass
+    
 
     # register zone end
     
     # do NOT touch !
-    def get_coordnameANDshape(self, exp_name:str)->list:
+    def get_coordnameANDshape(self, exp_name:str, method:str="average")->list:
         registered_exp_name = [(attr.lower(), getattr(self, attr)) for attr in dir(self) if  attr.startswith("_") and not attr.endswith("_") and callable(getattr(self, attr))]
         
         ans = []
         for exp in registered_exp_name:
             if exp[0].replace("_","") == exp_name.lower():
-                ans = exp[1]()
+                ans = exp[1](method)
         if len(ans) == 0:
             raise NameError(f"The exp name '{exp_name}' haven't been registered. ")
 
@@ -33,7 +97,7 @@ class DSCoordNameRegister():
 
 """ Use it to build your dataset"""
 class DatasetCompiler():
-    def __init__( self, exp_name:str, RegisterReference:bool=True):
+    def __init__( self, exp_name:str,method:str, RegisterReference:bool=True):
         """ 
         ### arg explains:\n
         1. `exp_name` must be given, please refer to `DSCoordNameRegister()` for the name you can assign. If you don't wanna use a registered exp name, set it '' or None.\n
@@ -46,7 +110,7 @@ class DatasetCompiler():
         self.__checkpoint__:bool = True
         self.__coordinates:dict = {}
         if RegisterReference:
-            self.__shape:list = DSCoordNameRegister().get_coordnameANDshape(exp_name) # It will print out the Dataset.data_var shape for the dataset, and it also shows you the name for coords.
+            self.__shape:list = DSCoordNameRegister().get_coordnameANDshape(exp_name, method) # It will print out the Dataset.data_var shape for the dataset, and it also shows you the name for coords.
         else:
             self.__shape:list = []
         
@@ -138,7 +202,7 @@ class DatasetCompiler():
             self.data_vars[name] = (self.__shape, value)
 
     def add_attrs(self, new_attributes:dict, old_attributes:dict={}):
-        """ Assign the  attributes in a dict here. If `Old_attributes` was given, we merge them together and put `old_attributes` at the first priority when there is a key name conflict. """
+        """ Assign the  attributes in a dict here. If `Old_attributes` was given, we merge them together and put `old_attributes` at the first priority when there is a attribute name conflict. """
         if not isinstance(new_attributes,dict):
             raise TypeError("While you are adding the new attributes, arg: `new_attributes` must be a dict.")
 
@@ -169,6 +233,8 @@ class DatasetCompiler():
 
 
 if __name__ == "__main__":
-    DC = DatasetCompiler("fluxcavity")    
+    table = DSCoordNameRegister()
+    table.get_coordnameANDshape("spinecho","oneshot")   
+    
     
             

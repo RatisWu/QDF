@@ -1,11 +1,10 @@
 """ Transfrom the raw nc data measured by QM into Qblox form. And it's reversible which means: qm -> qblox -> qm is okay. """
 """ Warning: Once you use it, the old nc will be modified and saved with the qblox format. It won't save a new nc for you. """
-import os
+import os, json
 from abc import ABC, abstractmethod
 from xarray import open_dataset, Dataset
-from numpy import array, arange, moveaxis
-from .Formalizer import DatasetCompiler
 
+from qdf.Formalizer import DatasetCompiler
 
 class QQAdapter(ABC):
     """ QM, Qblox dataset bidirectional transformer. """
@@ -14,6 +13,7 @@ class QQAdapter(ABC):
         self.DSmaker:DatasetCompiler = None
         self.__file_path:str = None
         self.__dataset:Dataset = None
+        self.__meas_method:str = "average"
         self.__data_type:str = "nc"
         self.__data_from:str = "qblox" # qblox | qm 
     
@@ -29,19 +29,26 @@ class QQAdapter(ABC):
     @property
     def data_from( self ):
         return self.__data_from
+    @property
+    def meas_method( self ):
+        return self.__meas_method
 
     """ prepare settings, built-in """
-    def settings(self, filepath_or_dataset:str|Dataset, exp_name:str, data_from:str=""):
+    def settings(self, filepath_or_dataset:str|Dataset, exp_name:str):
         """ Import:\n 1. raw data path or a dataset,\n  2. exp_name (`qcat.utility.formater.DSCoordNameRegister()` for more details.),\n 3. data_from in ['qblox', 'qm']   """
-        self.DSmaker = DatasetCompiler(exp_name)
-
         if isinstance(filepath_or_dataset, str): 
             self.__file_path = filepath_or_dataset
             self.__data_type = os.path.split(filepath_or_dataset)[-1].split(".")[-1]
 
             match self.__data_type:
                 case 'nc':
-                    self.__dataset = open_dataset(self.__file_path)
+                    try:
+                        self.__dataset = open_dataset(self.__file_path)
+                    except:
+                        try:
+                            self.__dataset = open_dataarray(self.__file_path)
+                        except:
+                            raise TypeError("The given nc file is not a Dataset or DataArray so i cannot read it ...")
                 case _:
                     raise ImportError(f"Data type = {self.__data_type} can't be handled so far.")
         elif isinstance(filepath_or_dataset, Dataset):
@@ -49,14 +56,13 @@ class QQAdapter(ABC):
         else:
             raise TypeError("Arg 'filepath_or_dataset' must be a str or Dataset !")
 
-        match data_from.lower():
-            case "qblox" | "qb" | None | "":
-                self.__data_from = "qblox"
-            case 'qm':
-                self.__data_from = "qm"
-            case _:
-                raise ValueError(f"Irrecognizable target_format = {data_from} was given.")
-    
+        
+        self.__data_from = self.__dataset.attrs["system"]
+        self.__meas_method = self.__dataset.attrs["method"].lower()
+
+        self.DSmaker = DatasetCompiler(exp_name,method=self.__meas_method)
+            
+               
     """ get exp name, built-in """
     def __getMyName__( self )->str:
         return self.__class__.__name__.split("_")[0]
@@ -104,44 +110,9 @@ class QQAdapter(ABC):
         """ transform the dataset. """
         pass
 
-
-####################################
-######    Implementations    #######
-####################################
-
-# ** name rule: ExpName_dataConverter(), ExpName is the name you registered in formater.DSCoordNameRegister(). Example: FluxCavity_dataConverter(), etc.
-
-class FluxCavity_dataConverter(QQAdapter):
-    """ Use `self.transformExecutor()` and get the dataset by `self.ds` """
-    def __init__(self, file_path:str, target_format:str):
-        super().__init__()
-        self.settings(file_path, self.__getMyName__(), target_format)
-
-    def QB_adapter(self):
-        pass
-
-    def QM_adapter(self)->Dataset:
-        bias = array(self.ds.coords["flux"])
-
-        # coordinates edit
-        self.DSmaker.assign_coords({"mixer":array(["I","Q"]),"bias":bias,"freq":arange(array(self.ds.coords["frequency"]).shape[0])})
-        # attributes edit
-        added_attrs = {"execution_time":"H00M00S00"}
-        self.DSmaker.add_attrs(added_attrs, self.ds.attrs)
-        
-        # data edit
-        for q_ro in self.ds.data_vars:
-            q = q_ro.split("_")[0]
-            freq_values = 2*bias.shape[0]*list(array(self.ds.coords["frequency"]))
-            self.DSmaker.add_data({q:moveaxis(array(self.ds[q_ro]),1,-1)})
-            self.DSmaker.add_data({f"{q}_freq":array(freq_values).reshape(2,bias.shape[0],array(self.ds.coords["frequency"]).shape[0])*1e6})
-    
-        # get dataset
-        return self.DSmaker.export_dataset()
-        
-        
              
 if __name__ == "__main__":
-    FCT = FluxCavity_dataConverter('/Users/ratiswu/Downloads/qm experiment data/Find_Flux_Period.nc','qblox')
-    FCT.transformExecutor()
-    print(FCT.ds)
+    from xarray import open_dataarray
+
+    d = open_dataarray("TestRawDataset/QM_rawdata/flux_dependent_cavity/Find_Flux_Period.nc")
+    print(d)
