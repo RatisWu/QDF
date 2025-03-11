@@ -21,59 +21,64 @@ class DSCoordNameRegister():
     def _PowerRabi(self, method:str="average"):
         match method.lower():
             case "average":
-                return ["q_idx", "mixer", "pi_amp"]
-            case "oneshot":
-                return ["q_idx", "mixer", "prepared_state", "index", "pi_amp"]
+                return ["q_idx", "mixer", "freq", "pi_amp"]
+            case "shot":
+                return ["q_idx", "mixer", "freq", "prepared_state", "index", "pi_amp"]
             case "state":
-                pass
+                return ["q_idx", "state", "freq", "prepared_state", "repeat", "index", "time"]
     
     def _TimeRabi(self, method:str="average"):
         match method.lower():
             case "average":
-                return ["q_idx", "mixer", "pi_dura"]
-            case "oneshot":
-                return ["q_idx", "mixer", "prepared_state", "index", "pi_dura"]
+                return ["q_idx", "mixer", "freq", "pi_dura"]
+            case "shot":
+                return ["q_idx", "mixer", "freq", "prepared_state", "index", "pi_dura"]
             case "state":
-                pass
+                return ["q_idx", "state", "freq", "prepared_state", "repeat", "index", "time"]
 
     def _ReadoutFidelity(self, method:str="average"):
-        return ["q_idx", "mixer", "prepared_state", "index"]
+        match method.lower():
+            case "state":
+                return ["q_idx", "repeat", "state", "prepared_state", "index"]
+            case _:
+                return ["q_idx", "repeat", "mixer", "prepared_state", "index"]
+
     
     def _EnergeRelaxation(self, method:str="average"):
         match method.lower():
             case "average":
                 return ["q_idx", "mixer", "repeat", "time"]
-            case "oneshot":
+            case "shot":
                 return ["q_idx", "mixer", "prepared_state", "repeat", "index", "time"]
             case "state":
-                pass
+                return ["q_idx", "state", "prepared_state", "repeat", "index", "time"]
 
     def _RamseyT2(self, method:str="average"):
         match method.lower():
             case "average":
                 return ["q_idx", "mixer", "repeat", "time"]
-            case "oneshot":
+            case "shot":
                 return ["q_idx", "mixer", "prepared_state", "repeat", "index", "time"]
             case "state":
-                pass
+                return ["q_idx", "state", "prepared_state", "repeat", "index", "time"]
     
-    def _SpinEcho(self, method:str="average"):
+    def _SpinEchoT2(self, method:str="average"):
         match method.lower():
             case "average":
                 return ["q_idx", "mixer", "repeat", "time"]
-            case "oneshot":
+            case "shot":
                 return ["q_idx", "mixer", "prepared_state", "repeat", "index", "time"]
             case "state":
-                pass
+                return ["q_idx", "state", "prepared_state", "repeat", "index", "time"]
     
     def _CPMG(self, method:str="average"):
         match method.lower():
             case "average":
                 return ["q_idx", "mixer", "repeat", "time"]
-            case "oneshot":
+            case "shot":
                 return ["q_idx", "mixer", "prepared_state", "repeat", "index", "time"]
             case "state":
-                pass
+                return ["q_idx", "state", "prepared_state", "repeat", "index", "time"]
     
 
     # register zone end
